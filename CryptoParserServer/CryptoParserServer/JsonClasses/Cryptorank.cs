@@ -120,7 +120,7 @@ namespace CryptoParserServer.JsonClasses.Cryptorank
     public class ListDatum
     {
         [JsonProperty("rank")]
-        public int? Rank { get; set; }
+        public long? Rank { get; set; }
 
         [JsonProperty("key")]
         public string Key { get; set; }
@@ -162,16 +162,16 @@ namespace CryptoParserServer.JsonClasses.Cryptorank
         public string Category { get; set; }
 
         [JsonProperty("categoryId")]
-        public int CategoryId { get; set; }
+        public long CategoryId { get; set; }
 
         [JsonProperty("tagIds")]
-        public List<int> TagIds { get; set; }
+        public List<long> TagIds { get; set; }
 
         [JsonProperty("fundIds")]
-        public List<int> FundIds { get; set; }
+        public List<long> FundIds { get; set; }
 
-        [JsonProperty("interest")]
-        public object Interest { get; set; }
+        [JsonProperty("longerest")]
+        public object longerest { get; set; }
 
         [JsonProperty("isTraded")]
         public bool IsTraded { get; set; }
@@ -201,7 +201,7 @@ namespace CryptoParserServer.JsonClasses.Cryptorank
         public string IcoStatus { get; set; }
 
         [JsonProperty("initialSupply")]
-        public int? InitialSupply { get; set; }
+        public long? InitialSupply { get; set; }
     }
 
     public class HistPrices

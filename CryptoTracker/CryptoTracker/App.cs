@@ -1,20 +1,22 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CryptoTracker
 {
     public class Settings
     {
-        public List<string> BlackListed { get; set; }
+        public List<string> BlackListedMarkets = new List<string>();
 
-        public int MinPercent { get; set; }
+        public List<string> BlackListedCoins = new List<string>();
 
-        public bool DrawCurrencies { get; set; }
+        public int MinPercent = 0;
+
+        public int MaxPercent = 0;
+
+        public bool DrawCurrencies = true;
+
+        public bool DrawFiats = true;
     }
 
     public static class App
@@ -23,18 +25,16 @@ namespace CryptoTracker
 
         public static string Server = "http://193.38.235.240:9090/";
 
-        public static string Version = "1.0.0";
+        public static string Version = "1.0.1";
 
         public static void LoadSettings()
         {
-            if (!File.Exists("Settings.json")) Settings = new Settings()
+            if (!File.Exists("Settings.json"))
             {
-                BlackListed = new List<string>(),
-                MinPercent = 0,
-                DrawCurrencies = true
-            };
+                Settings = new Settings();
+                SaveSettings();
+            }
             else Settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json"));
-            SaveSettings();
         }
 
         public static void SaveSettings()

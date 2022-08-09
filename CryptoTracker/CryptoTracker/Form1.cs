@@ -20,6 +20,8 @@ namespace CryptoTracker
 
         public static string hwid = HWID.GetHardwareId();
 
+        public static List<string> fiats = new List<string>();
+
         public Form1()
         {
             InitializeComponent();
@@ -36,16 +38,11 @@ namespace CryptoTracker
             Process.Start("https://github.com/Irval1337");
         }
 
-        private void черныйСписокToolStripMenuItem_Click(object sender, EventArgs e)
+        private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
         {
             isEnabled = false;
             button1.Text = "Начать парсинг";
 
-            new BlackList().ShowDialog();
-        }
-
-        private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
-        {
             char number = e.KeyChar;
 
             if (number == 8) return;
@@ -61,7 +58,12 @@ namespace CryptoTracker
             App.LoadSettings();
             client = new RestClient(App.Server);
             textBox1.Text = App.Settings.MinPercent.ToString();
+            textBox2.Text = App.Settings.MaxPercent.ToString();
             checkBox1.Checked = App.Settings.DrawCurrencies;
+            checkBox2.Checked = App.Settings.DrawFiats;
+
+            textBox3.Text = "*";
+            textBox4.Text = "*";
 
             label2.Text += App.Version;
 
@@ -72,7 +74,7 @@ namespace CryptoTracker
             if (server_version != App.Version)
             {
                 MessageBox.Show("Ваша версия программы устарела! Последняя актуальная: " + server_version);
-                Process.Start("https://t.me/zalupaarbitrage");
+                Process.Start("Updater.exe");
                 Environment.Exit(0);
             }
 
@@ -92,6 +94,78 @@ namespace CryptoTracker
             {
                 this.Text += $" [Авторизирован {user.Username} до {user.LicenseExpiration.AddHours(3).ToString()}]";
             }
+
+            {
+                RestClient restClient = new RestClient("https://raw.githubusercontent.com/");
+                request = new RestRequest("mhs/world-currencies/master/currencies.json", Method.Get);
+                response = restClient.Execute(request);
+                var fullFiats = JsonConvert.DeserializeObject<List<CryptoParserServer.JsonClasses.Internal.Fiat>>(encoding.GetString(response.RawBytes));
+                fullFiats.ForEach(x => fiats.Add(x.cc));
+            }
+        }
+
+        void listbox_update()
+        {
+            Task.Factory.StartNew(() =>
+            {
+                RestRequest request = new RestRequest("GetBestArbitrages", Method.Get);
+
+                request.AddParameter("hwid", hwid);
+
+                RestResponse response = client.Execute(request);
+                Encoding encoding = Encoding.GetEncoding("utf-8");
+
+                var arbitrages = JsonConvert.DeserializeObject<List<CryptoParserServer.JsonClasses.Internal.Arbitrage>>(encoding.GetString(response.RawBytes));
+
+                this.BeginInvoke((Action)(() =>
+                {
+                    this.listBox1.Items.Clear();
+                }));
+
+                if (!isEnabled) return;
+
+                Arbitrages.Clear();
+
+                bool needFilterFrom = true, needFilterTo = true;
+
+                if (string.IsNullOrEmpty(textBox3.Text) || textBox3.Text == "*") needFilterFrom = false;
+                if (string.IsNullOrEmpty(textBox4.Text) || textBox4.Text == "*") needFilterTo = false;
+
+                foreach (var arbitrage in arbitrages)
+                {
+                    if (App.Settings.BlackListedMarkets.Contains(arbitrage.MarketFrom.Name) || App.Settings.BlackListedMarkets.Contains(arbitrage.MarketTo.Name)) continue;
+
+                    if (App.Settings.BlackListedCoins.Contains(arbitrage.MarketFrom.Currency.Split('/')[0])) continue;
+                    if (App.Settings.BlackListedCoins.Contains(arbitrage.MarketFrom.Currency.Split('/')[1])) continue;
+
+                    if (App.Settings.BlackListedCoins.Contains(arbitrage.MarketTo.Currency.Split('/')[0])) continue;
+                    if (App.Settings.BlackListedCoins.Contains(arbitrage.MarketTo.Currency.Split('/')[1])) continue;
+
+                    if (arbitrage.Percent > (string.IsNullOrEmpty(textBox2.Text) ? 0 : Convert.ToInt32(textBox2.Text))) continue;
+                    if (arbitrage.Percent < (string.IsNullOrEmpty(textBox1.Text) ? 0 : Convert.ToInt32(textBox1.Text))) break;
+
+                    if ((needFilterFrom && arbitrage.MarketFrom.Currency.Split('/')[1] != textBox3.Text) || (needFilterTo && arbitrage.MarketTo.Currency.Split('/')[1] != textBox4.Text)) continue;
+
+                    if (!App.Settings.DrawFiats && !fiats.Contains(textBox3.Text) && !fiats.Contains(textBox4.Text))
+                    {
+                        if (fiats.Contains(arbitrage.MarketFrom.Currency.Split('/')[0])) continue;
+                        if (fiats.Contains(arbitrage.MarketFrom.Currency.Split('/')[1])) continue;
+
+                        if (fiats.Contains(arbitrage.MarketTo.Currency.Split('/')[0])) continue;
+                        if (fiats.Contains(arbitrage.MarketTo.Currency.Split('/')[1])) continue;
+                    }
+
+                    Arbitrages.Add(arbitrage);
+
+                    this.BeginInvoke((Action)(() =>
+                    {
+                        if (checkBox1.Checked)
+                            this.listBox1.Items.Add($"{arbitrage.Percent}% {arbitrage.MarketFrom.Name} ({arbitrage.MarketFrom.Currency}) -> {arbitrage.MarketTo.Name} ({arbitrage.MarketTo.Currency})");
+                        else
+                            this.listBox1.Items.Add($"{arbitrage.Percent}% {arbitrage.MarketFrom.Name} -> {arbitrage.MarketTo.Name}");
+                    }));
+                }
+            }).Wait();
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -105,44 +179,7 @@ namespace CryptoTracker
                 Task.Factory.StartNew(() => {
                     while (isEnabled)
                     {
-                        Task.Factory.StartNew(() =>
-                        {
-                            RestRequest request = new RestRequest("GetBestArbitrages", Method.Get);
-
-                            request.AddParameter("hwid", hwid);
-
-                            RestResponse response = client.Execute(request);
-                            Encoding encoding = Encoding.GetEncoding("utf-8");
-
-                            var arbitrages = JsonConvert.DeserializeObject<List<CryptoParserServer.JsonClasses.Internal.Arbitrage>>(encoding.GetString(response.RawBytes));
-
-                            this.BeginInvoke((Action)(() =>
-                            {
-                                this.listBox1.Items.Clear();
-                            }));
-
-                            Arbitrages.Clear();
-
-                            foreach (var arbitrage in arbitrages)
-                            {
-                                if (App.Settings.BlackListed.Contains(arbitrage.MarketFrom.Name) || App.Settings.BlackListed.Contains(arbitrage.MarketTo.Name)) continue;
-                                if (arbitrage.Percent < (string.IsNullOrEmpty(textBox1.Text) ? 0 : Convert.ToInt32(textBox1.Text))) break;
-
-                                Arbitrages.Add(arbitrage);
-                            }
-
-                            foreach (var arbitrage in Arbitrages)
-                            {
-                                this.BeginInvoke((Action)(() =>
-                                {
-                                    if (checkBox1.Checked)
-                                        this.listBox1.Items.Add($"{arbitrage.Percent}% {arbitrage.MarketFrom.Name} ({arbitrage.MarketFrom.Currency}) -> {arbitrage.MarketTo.Name} ({arbitrage.MarketTo.Currency})");
-                                    else
-                                        this.listBox1.Items.Add($"{arbitrage.Percent}% {arbitrage.MarketFrom.Name} -> {arbitrage.MarketTo.Name}");
-                                }));
-                            }
-
-                        }).Wait();
+                        listbox_update();
 
                         Thread.Sleep(10000);
                     }
@@ -181,13 +218,60 @@ namespace CryptoTracker
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             App.Settings.MinPercent = string.IsNullOrEmpty(textBox1.Text) ? 0 : Convert.ToInt32(textBox1.Text);
+            App.Settings.MaxPercent = string.IsNullOrEmpty(textBox2.Text) ? 0 : Convert.ToInt32(textBox2.Text);
             App.SaveSettings();
             Environment.Exit(0);
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
-            App.Settings.DrawCurrencies = checkBox1.Checked;
+            if (App.Settings.DrawCurrencies != checkBox1.Checked)
+            {
+                App.Settings.DrawCurrencies = checkBox1.Checked;
+                listbox_update();
+            }
+        }
+
+        private void биржиToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            isEnabled = false;
+            button1.Text = "Начать парсинг";
+
+            new BlackListMarkets().ShowDialog();
+        }
+
+        private void textBox2_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            isEnabled = false;
+            button1.Text = "Начать парсинг";
+
+            char number = e.KeyChar;
+
+            if (number == 8) return;
+
+            if (!Char.IsDigit(number) || Convert.ToInt32(textBox2.Text + number) > 100)
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void валютаToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            isEnabled = false;
+            button1.Text = "Начать парсинг";
+
+            new BlackListCoins().ShowDialog();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            listbox_update();
+        }
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e)
+        {
+            App.Settings.DrawFiats = checkBox2.Checked;
+            listbox_update();
         }
     }
 }

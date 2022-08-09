@@ -217,11 +217,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.cs" />
-    <Compile Include="BlackList.cs">
+    <Compile Include="BlackListMarkets.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="BlackList.Designer.cs">
-      <DependentUpon>BlackList.cs</DependentUpon>
+    <Compile Include="BlackListMarkets.Designer.cs">
+      <DependentUpon>BlackListMarkets.cs</DependentUpon>
     </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -230,15 +230,24 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="HwidParser.cs" />
+    <Compile Include="BlackListCoins.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BlackListCoins.Designer.cs">
+      <DependentUpon>BlackListCoins.cs</DependentUpon>
+    </Compile>
     <Compile Include="JsonClasses\Cryptorank.cs" />
     <Compile Include="JsonClasses\Internal.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="BlackList.resx">
-      <DependentUpon>BlackList.cs</DependentUpon>
+    <EmbeddedResource Include="BlackListMarkets.resx">
+      <DependentUpon>BlackListMarkets.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BlackListCoins.resx">
+      <DependentUpon>BlackListCoins.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

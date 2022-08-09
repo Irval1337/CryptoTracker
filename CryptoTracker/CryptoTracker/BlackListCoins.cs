@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace CryptoTracker
 {
-    public partial class BlackList : Form
+    public partial class BlackListCoins : Form
     {
-        public BlackList()
+        public BlackListCoins()
         {
             InitializeComponent();
         }
@@ -21,7 +21,7 @@ namespace CryptoTracker
         {
             App.LoadSettings();
 
-            foreach (var market in App.Settings.BlackListed)
+            foreach (var market in App.Settings.BlackListedCoins)
             {
                 listBox1.Items.Add(market);
             }
@@ -37,7 +37,7 @@ namespace CryptoTracker
             if (string.IsNullOrEmpty(textBox1.Text)) return;
 
             listBox1.Items.Add(textBox1.Text);
-            App.Settings.BlackListed.Add(textBox1.Text);
+            App.Settings.BlackListedCoins.Add(textBox1.Text);
 
             textBox1.Clear();
             listBox1.SelectedIndex = -1;
@@ -47,7 +47,7 @@ namespace CryptoTracker
         {
             if (listBox1.SelectedIndex == -1) return;
 
-            App.Settings.BlackListed.RemoveAt(listBox1.SelectedIndex);
+            App.Settings.BlackListedCoins.RemoveAt(listBox1.SelectedIndex);
             listBox1.Items.RemoveAt(listBox1.SelectedIndex);
 
             listBox1.SelectedIndex = -1;

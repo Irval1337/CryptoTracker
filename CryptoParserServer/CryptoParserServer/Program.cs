@@ -1,21 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.IO;
-using RestSharp;
-using System.Text;
 using Newtonsoft.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using WatsonWebserver;
 using NLog.Config;
-using NLog.Layouts;
 using NLog.Targets;
 using NLog;
 using NLog.Conditions;
-using System.Threading;
 using MySqlConnector;
+using System.IO.Compression;
 
 namespace CryptoParserServer
 {
@@ -31,6 +24,16 @@ namespace CryptoParserServer
         {
             await InitializeLogger();
             App.LoadSettings();
+
+            if (!Directory.Exists("client"))
+            {
+                Logger.Error("The client's file directory is missing");
+                return;
+            }
+
+            if (File.Exists("client.zip")) File.Delete("client.zip");
+            ZipFile.CreateFromDirectory("client", "client.zip");
+
             Server s = new Server(App.Settings.Server.Ip, App.Settings.Server.Port, false, DefaultRoute);
 
             s.Routes.Static.Add(HttpMethod.GET, "/GetBestArbitrages", Routes.GetBestArbitrages);
@@ -39,6 +42,8 @@ namespace CryptoParserServer
             s.Routes.Static.Add(HttpMethod.GET, "/GiveLicense", Routes.GiveLicense); 
             s.Routes.Static.Add(HttpMethod.GET, "/DeleteLicense", Routes.DeleteLicense);
             s.Routes.Static.Add(HttpMethod.GET, "/CurrentVersion", Routes.CurrentVersion);
+            s.Routes.Static.Add(HttpMethod.GET, "/CurrentVersionInfo", Routes.CurrentVersionInfo);
+            s.Routes.Static.Add(HttpMethod.GET, "/GetFiles", Routes.GetFiles);
             s.Routes.Static.Add(HttpMethod.GET, "/SetCurrentVersion", Routes.SetCurrentVersion);
             s.Routes.Static.Add(HttpMethod.GET, "/SetDemoMode", Routes.SetDemoMode);
             s.Start();
@@ -53,7 +58,7 @@ namespace CryptoParserServer
 
             СryptorankApi сryptorankApi = new СryptorankApi();
 
-            Task.Factory.StartNew(() =>
+            await Task.Factory.StartNew(() =>
             {
                 while (!needClose)
                 {

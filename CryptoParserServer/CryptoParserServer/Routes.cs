@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using WatsonWebserver;
 
@@ -229,7 +230,20 @@ namespace CryptoParserServer
             }
         }
 
-        public static string SetVersionString(string data)
+        public static async Task CurrentVersionInfo(HttpContext ctx)
+        {
+            try
+            {
+                await ctx.Response.Send(App.Settings.LastUpdateInfo);
+            }
+            catch (Exception ex)
+            {
+                Program.Logger.Error(ex.Message);
+                await ctx.Response.Send(ex.Message);
+            }
+        }
+
+        public static string SetVersionString(string data, string body)
         {
             try
             {
@@ -250,6 +264,7 @@ namespace CryptoParserServer
                     return "ERROR";
 
                 App.Settings.Version = _params[1].Split('=')[1];
+                App.Settings.LastUpdateInfo = body;
                 App.SaveSettings();
                 return "OK";
             }
@@ -263,7 +278,7 @@ namespace CryptoParserServer
         {
             try
             {
-                await ctx.Response.Send(SetVersionString(ctx.Request.Url.RawWithQuery));
+                await ctx.Response.Send(SetVersionString(ctx.Request.Url.RawWithQuery, ctx.Request.DataAsString));
             }
             catch (Exception ex)
             {
@@ -306,6 +321,19 @@ namespace CryptoParserServer
             try
             {
                 await ctx.Response.Send(SetDemoModeString(ctx.Request.Url.RawWithQuery));
+            }
+            catch (Exception ex)
+            {
+                Program.Logger.Error(ex.Message);
+                await ctx.Response.Send(ex.Message);
+            }
+        }
+
+        public static async Task GetFiles(HttpContext ctx)
+        {
+            try
+            {
+                await ctx.Response.Send(File.ReadAllBytes("client.zip"));
             }
             catch (Exception ex)
             {

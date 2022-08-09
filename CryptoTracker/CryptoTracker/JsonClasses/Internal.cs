@@ -49,4 +49,13 @@ namespace CryptoParserServer.JsonClasses.Internal
 
         public enum UserStatus { Registered, Licensed, Admin };
     }
+
+    public class Fiat
+    {
+        public string cc { get; set; }
+
+        public string symbol { get; set; }
+
+        public string name { get; set; }
+    }
 }

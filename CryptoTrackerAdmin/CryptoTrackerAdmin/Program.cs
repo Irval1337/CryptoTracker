@@ -61,10 +61,23 @@ while (true)
             Console.WriteLine(encoding.GetString(response.RawBytes));
             break;
         case "/SetVersion":
+            Console.WriteLine("Укажите описание обновления (пустая строка - признак конца):");
+            string updateInfo = "";
+            string line;
+            do
+            {
+                line = Console.ReadLine();
+                if (line != "") updateInfo += (updateInfo != "" ? "\n" : "") + line;
+            }
+            while (line != "");
+
+            string version = data[1];
             request = new RestRequest("SetCurrentVersion", Method.Get);
 
             request.AddParameter("hwid", hwid);
-            request.AddParameter("version", data[1]);
+            request.AddParameter("version", version);
+
+            request.AddBody(updateInfo);
 
             response = client.Execute(request);
             Console.WriteLine(encoding.GetString(response.RawBytes));

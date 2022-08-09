@@ -1,8 +1,6 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using MySqlConnector;
 
 namespace CryptoParserServer
@@ -34,6 +32,8 @@ namespace CryptoParserServer
         public string Version { get; set; }
 
         public bool DemoModeEnabled { get; set; }
+
+        public string LastUpdateInfo = "";
     }
 
     public static class App
@@ -60,8 +60,8 @@ namespace CryptoParserServer
                     Password = "81WCXIh6G6#%"
                 },
                 Version = "1.0.0",
-                DemoModeEnabled = false
-
+                DemoModeEnabled = false,
+                LastUpdateInfo = ""
             };
             else Settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json"));
             SaveSettings();

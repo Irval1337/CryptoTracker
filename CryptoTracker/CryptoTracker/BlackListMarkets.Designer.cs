@@ -1,6 +1,6 @@
 ﻿namespace CryptoTracker
 {
-    partial class BlackList
+    partial class BlackListMarkets
     {
         /// <summary>
         /// Required designer variable.
